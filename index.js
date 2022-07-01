@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
@@ -38,6 +38,53 @@ async function run() {
       const cursor = completedTasksCollection.find(query);
       const completedTasks = await cursor.toArray();
       res.send(completedTasks);
+    });
+
+    //insert a new task
+    app.post("/addnewtask", async (req, res) => {
+      const doc = await req.body;
+      const result = await newTasksCollection.insertOne(doc);
+      res.send(result);
+    });
+
+    //delete a completed task
+    app.delete("/deletecompletedtask/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await completedTasksCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //delete a new task
+    app.delete("/deletenewtask/:id", async (req, res) => {
+      const x = req.params.id;
+      const query = { _id: ObjectId(x) };
+      const result = await newTasksCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //insert task into completedTasks
+    app.post("/addcompletedtask", async (req, res) => {
+      const doc = await req.body;
+      const result = await completedTasksCollection.insertOne(doc);
+      res.send(result);
+    });
+
+    //update new task
+    app.put("/updatetask/:id", async (req, res) => {
+      const id = req.params.id;
+      const edited = await req.body;
+      const filter = { _id: ObjectId(id) };
+      const option = { upsert: true };
+      const updateDoc = {
+        $set: edited,
+      };
+      const result = await newTasksCollection.updateOne(
+        filter,
+        updateDoc,
+        option
+      );
+      res.send(result);
     });
   } finally {
   }
